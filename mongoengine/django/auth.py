@@ -3,6 +3,7 @@ from mongoengine import *
 from django.utils.encoding import smart_str
 from django.contrib.auth.models import _user_get_all_permissions
 from django.contrib.auth.models import _user_has_perm
+from django.contrib.auth.models import _user_has_module_perms
 from django.contrib.auth.models import AnonymousUser
 from django.utils.translation import ugettext_lazy as _
 
@@ -123,6 +124,17 @@ class User(Document):
 
         # Otherwise we need to check the backends.
         return _user_has_perm(self, perm, obj)
+
+    def has_module_perms(self, app_label):
+        """
+        Returns True if the user has any permissions in the given app label.
+        Uses pretty much the same logic as has_perm, above.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        return _user_has_module_perms(self, app_label)
 
     @classmethod
     def create_user(cls, username, password, email=None):
